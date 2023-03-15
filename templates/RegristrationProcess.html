@@ -1,0 +1,432 @@
+<html>
+
+<head>
+
+  <title>Document Registration Process</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css"
+    integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous" />
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+  <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+    crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-jcrop/0.9.15/css/jquery.Jcrop.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-jcrop/0.9.15/js/jquery.Jcrop.js"></script>
+  <!-- <link rel="stylesheet" href="{{ url_for('static', filename='css/RegistrationProcess.css') }}"> -->
+  <link rel="stylesheet" href="../static/css/RegistrationProcess.css">
+
+  <script>
+
+    var Snip_id = "";
+    var Snip_LableName = "";
+    var instance = 12;
+
+    function removeDiv(elem) {
+      console.log(elem.id);
+      var element = document.forms['ExtractedDataForm'].getElementsByClassName(elem.id);
+      console.log(element[0]);
+      element[0].remove();
+      instance--;
+    }
+
+    function Edit() {
+      var item = document.forms['ExtractedDataForm'].getElementsByClassName("label-value");
+      console.log(item.length);
+      for (var i = 0; i < item.length; i++) {
+        item[i].setAttribute("contentEditable", "true");
+      }
+    }
+
+    function StopEditing() {
+      var item = document.forms['ExtractedDataForm'].getElementsByClassName("label-value");
+      console.log(item.length);
+      for (var i = 0; i < item.length; i++) {
+        new_value = item[i].textContent;
+        item[i].setAttribute("contentEditable", "false");
+        console.log(item[i].nextElementSibling);
+      }
+    }
+
+    function validateForm() {
+      let x = document.forms['ExtractedDataForm']["CompanyName"].value;
+      let y = document.forms['ExtractedDataForm']["InvoiceType"].value;
+      let input_fileds_count = document.forms['ExtractedDataForm'].getElementsByTagName('input').length;
+      console.log(x, y);
+      if (x == "" || y == "") {
+        alert("Company Name and Invoice Type Can't be empty!");
+        return false;
+      }
+      if (input_fileds_count <= 2) {
+        alert("Alteast One field is required!")
+        return false;
+      }
+    }
+
+    function Capturing(elem) {
+      console.log("Capturing");
+      console.log(elem.id);
+      let item1 = document.forms['ExtractedDataForm'].getElementsByClassName(elem.id);
+      console.log(item1[3]);
+      Snip_LableName = item1[3].textContent;
+      console.log(Snip_LableName);
+      // let lable_value = item1.getElementsByClassName("label-value");
+      // console.log(lable_value);
+      Snip_id = elem.id;
+      $('#img2').Jcrop({
+        onSelect: SetCoordinates
+      });
+      return true;
+    }
+
+    function SetCoordinates(c) {
+      data = { "id": Snip_id, values: c, "Snip_lableName": Snip_LableName }
+      $.ajax({
+        type: "POST",
+        url: "/SendCoordinates",
+        data: JSON.stringify(data),
+        contentType: "application/json",
+        dataType: 'json',
+        success: function (result) {
+          // console.log(Snip_id);
+          // console.log("Result:");
+          // console.log(result);
+            let item = document.getElementById(Snip_id);
+            // console.log(item);
+            let item1 = document.forms['ExtractedDataForm'].getElementsByClassName(Snip_id);
+            // console.log(item1);
+          item1[2].setAttribute("value", result['value']);
+        }
+      });
+      JcropAPI = $('#img2').data('Jcrop');
+      JcropAPI.destroy();
+    }
+
+    function newTextBox() {
+
+      instance++;
+
+      //make First Div
+      var DIV1 = document.createElement('div');
+      DIV1.setAttribute("class", instance + " d-flex margin-top-5");
+
+      //make DIV2
+      var DIV2 = document.createElement('div');
+      DIV2.setAttribute("class", instance + " form-floating col");
+
+      DIV1.appendChild(DIV2);
+
+      //Make DIV3
+
+      //make Input 
+      var newInput = document.createElement("INPUT");
+      newInput.setAttribute("class", instance + " form-control");
+      newInput.id = instance;
+      newInput.placeholder = "New Field"
+      newInput.name = "text" + instance;
+      newInput.type = "text";
+
+      //Make Label
+      var label = document.createElement('label');
+      label.setAttribute('class',  instance + ' label-value');
+      label.setAttribute("for", "floatingInput")
+      label.innerHTML = "New Field";
+
+      DIV2.appendChild(newInput);
+      DIV2.appendChild(label);
+
+      var DIV3 = document.createElement('div');
+      DIV3.setAttribute("class", "margin-left-5");
+
+      var captureButton = document.createElement('a');
+      captureButton.setAttribute("class", "active text-center margin-top");
+      captureButton.setAttribute("value", "snip");
+      captureButton.setAttribute("name", "snip");
+      captureButton.id = instance;
+      captureButton.setAttribute("onclick", "Capturing(this)");
+      
+
+      //caputebutton icon 
+      var Captureicon = document.createElement("i");
+      Captureicon.setAttribute("class", "fas fa-camera fa-2x");
+
+      DIV3.appendChild(captureButton);
+      captureButton.appendChild(Captureicon);
+      DIV1.appendChild(DIV3);
+
+
+      //Make DIV4
+      var DIV4 = document.createElement('div');
+      DIV4.setAttribute("class", "margin-left-5");
+
+      //DeleteButton a tag 
+      var DeleteButton = document.createElement('a');
+      DeleteButton.setAttribute("class", "active text-center margin-top");
+      DeleteButton.id = instance;
+      DeleteButton.setAttribute("onclick", "removeDiv(this)");
+
+      //DeleteButton icon 
+      var Deleteicon = document.createElement("i");
+      Deleteicon.setAttribute("class", "fas fa-trash-alt fa-2x");
+      Deleteicon.setAttribute("style", 'color:#0080ff');
+
+
+      DIV4.appendChild(DeleteButton);
+      DeleteButton.appendChild(Deleteicon);
+      DIV1.appendChild(DIV4);
+
+
+      var btn = document.createElement("button");
+      btn.setAttribute("onclick", "removeDiv(this)");
+      btn.setAttribute("id", instance);
+      btn.innerHTML = "remove";
+
+
+      document.getElementById("NewFieldAdd").appendChild(DIV1);
+    }
+
+
+  </script>
+
+</head>
+
+<body>
+  <p>
+  <h1 class="text-center">Document Registration Process</h1>
+  </p>
+  <div class="row main-contain marginleftright0">
+    <div class="col-lg-4 col-md-4 col-12">
+      <div class="section-right" id="mydiv">
+        <section class="padding-10">
+
+          <form name="ExtractedDataForm" id="ExtractedDataForm" method="POST" onsubmit="return validateForm()"
+            action='\RegistrationProcess'>
+
+            <div class="margin-top-5 padding-top-0">
+              <p>
+                <h9 class="text-center">Enter Company Name and Invoice Type</h9>
+              </p>
+
+              <div class="form-floating">
+                <input type="text" class="form-control" Name="CompanyName" id="CompanyName" placeholder="Company Name">
+                <label for="floatingInput">Company Name</label>
+              </div>
+
+              <div class="form-floating margin-top-5">
+                <input type="text" class="form-control" Name="InvoiceType" id="InvoiceType" placeholder="Invoice Type">
+                <label for="floatingInput">Invoice Type</label>
+              </div>
+
+              <div class="form-floating margin-top-5">
+                <input type="text" class="form-control" Name="TypeOfDocument" id="TypeOfDocument" placeholder="Document Type">
+                <label for="floatingInput">Document Type</label>
+              </div>
+
+              <button type="button" onclick="Edit(this)">Edit Lables</button>
+              <button type="button" onclick="StopEditing(this)">Stop Editing</button>
+              <button type="button" onclick="newTextBox()">New Text</button>
+
+            </div>
+
+            <p>
+            <h5 class="text-left"> Start Cropping!! </h5>
+            </p>
+
+            <div class="padding-top-0 right-scroll right-border margin-top-5" id="NewFieldAdd">
+              <div class="0 d-flex margin-top-5">
+                <div class="0 form-floating col">
+                  <input type="text" class="0 form-control" Name="Name" id="0" placeholder="Name">
+                  <label class =" 0 label-value" for="floatingInput">Name</label>
+                </div>
+                <div class="margin-left-5">
+                  <a class="active text-center margin-top" value="snip" name="snip" id="0" onclick = "Capturing(this)"><i
+                      class="fas fa-camera fa-2x"></i></a>
+                </div>
+                <div class="margin-left-5">
+                  <a class="active text-center margin-top" value="snip" name="snip" id="0" onclick = "removeDiv(this)"><i
+                      class='fas fa-trash-alt fa-2x' style='color:#0080ff'></i></a>
+                </div>
+              </div>
+              <div class="1 d-flex margin-top-5">
+                <div class="1 form-floating col">
+                  <input type="text" class="1 form-control" Name="Invoice No." id="1" placeholder="Invoice No">
+                  <label class ="1 label-value" for="floatingInput">Invoice No</label>
+                </div>
+                <div class="margin-left-5">
+                  <a class="active text-center margin-top" value="snip" name="snip" id="1" onclick = "Capturing(this)"><i
+                      class="fas fa-camera fa-2x"></i></a>
+                </div>
+                <div class="margin-left-5">
+                  <a class="active text-center margin-top" value="snip" name="snip" id="1" onclick = "removeDiv(this)"><i
+                      class='fas fa-trash-alt fa-2x' style='color:#0080ff'></i></a>
+                </div>
+              </div>
+
+              <div class="2 d-flex margin-top-5">
+                <div class="2 form-floating col">
+                  <input type="text" class="2 form-control" Name="Invoice_Date" id="2" placeholder="Invoice Date">
+                  <label class ="2 label-value" for="floatingInput">Invoice Date</label>
+                </div>
+                <div class="margin-left-5">
+                  <a class="active text-center margin-top" value="snip" name="snip" id="2" onclick = "Capturing(this)"><i
+                      class="fas fa-camera fa-2x"></i></a>
+                </div>
+                <div class="margin-left-5">
+                  <a class="active text-center margin-top" value="snip" name="snip" id="2" onclick = "removeDiv(this)"><i
+                      class='fas fa-trash-alt fa-2x' style='color:#0080ff'></i></a>
+                </div>
+              </div>
+              <div class="3 d-flex margin-top-5">
+                <div class="3 form-floating col">
+                  <input type="text" class="3 form-control" Name="Delivery_Note" id="3" placeholder="Delivery Note:">
+                  <label class ="3 label-value" for="floatingInput">Delivery Note:</label>
+                </div>
+                <div class="margin-left-5">
+                  <a class="active text-center margin-top" value="snip" name="snip" id="3" onclick = "Capturing(this)"><i
+                      class="fas fa-camera fa-2x"></i></a>
+                </div>
+                <div class="margin-left-5">
+                  <a class="active text-center margin-top" value="snip" name="snip" id="3" onclick = "removeDiv(this)"><i
+                      class='fas fa-trash-alt fa-2x' style='color:#0080ff'></i></a>
+                </div>
+              </div>
+              <div class="4 d-flex margin-top-5">
+                <div class="4 form-floating col">
+                  <input type="text" class="4 form-control" Name="Mode/Terms_Of_Payment" id="4"
+                    placeholder="Mode/Terms Of Payment:">
+                  <label class ="4 label-value" for="floatingInput">Mode/Terms Of Payment:</label>
+                </div>
+                <div class="margin-left-5">
+                  <a class="active text-center margin-top" value="snip" name="snip" id="4" onclick = "Capturing(this)"><i
+                      class="fas fa-camera fa-2x"></i></a>
+                </div>
+                <div class="margin-left-5">
+                  <a class="active text-center margin-top" value="snip" name="snip" id="4" onclick = "removeDiv(this)"><i
+                      class='fas fa-trash-alt fa-2x' style='color:#0080ff'></i></a>
+                </div>
+              </div>
+              <div class="5 d-flex margin-top-5">
+                <div class="5 form-floating col">
+                  <input type="text" class="5 form-control" Name="Reference_No_Date" id="5"
+                    placeholder="Reference No. & Date::">
+                  <label class ="5 label-value" for="floatingInput">Reference No. & Date:</label>
+                </div>
+                <div class="margin-left-5">
+                  <a class="active text-center margin-top" value="snip" name="snip" id="5" onclick = "Capturing(this)"><i
+                      class="fas fa-camera fa-2x"></i></a>
+                </div>
+                <div class="margin-left-5">
+                  <a class="active text-center margin-top" value="snip" name="snip" id="5" onclick = "removeDiv(this)"><i
+                      class='fas fa-trash-alt fa-2x' style='color:#0080ff'></i></a>
+                </div>
+              </div>
+              <div class="6 d-flex margin-top-5">
+                <div class="6 form-floating col">
+                  <input type="text" class="6 form-control" Name="Buyer's Order No." id="6"
+                    placeholder="Buyer's Order No.:">
+                  <label class ="6 label-value" for="floatingInput">Buyer's Order No.:</label>
+                </div>
+                <div class="margin-left-5">
+                  <a class="active text-center margin-top" value="snip" name="snip" id="6" onclick = "Capturing(this)"><i
+                      class="fas fa-camera fa-2x"></i></a>
+                </div>
+                <div class="margin-left-5">
+                  <a class="active text-center margin-top col" value="snip" name="snip" id="6" onclick = "removeDiv(this)"><i
+                      class='fas fa-trash-alt fa-2x' style='color:#0080ff'></i></a>
+                </div>
+              </div>
+              <div class="7 d-flex margin-top-5">
+                <div class="7 form-floating col">
+                  <input type="text" class="7 form-control" Name="Delivery Note Date" id="7"
+                    placeholder="Delivery Note Date:">
+                  <label  class ="7 label-value" for="floatingInput">Delivery Note Date:</label>
+                </div>
+                <div class="margin-left-5">
+                  <a class="active text-center margin-top" value="snip" name="snip" id="7" onclick = "Capturing(this)"><i
+                      class="fas fa-camera fa-2x"></i></a>
+                </div>
+                <div class="margin-left-5">
+                  <a class="active text-center margin-top" value="snip" name="snip" id="7" onclick = "removeDiv(this)"><i
+                      class='fas fa-trash-alt fa-2x' style='color:#0080ff'></i></a>
+                </div>
+              </div>
+              <div class="8 d-flex margin-top-5">
+                <div class="8 form-floating col">
+                  <input type="text" class="8 form-control" Name="Dispatched through" id="8"
+                    placeholder="Dispatched through:">
+                  <label class ="8 label-value" for="floatingInput">Dispatched through:</label>
+                </div>
+                <div class="margin-left-5">
+                  <a class="active text-center margin-top" value="snip" name="snip" id="8" onclick = "Capturing(this)"><i
+                      class="fas fa-camera fa-2x"></i></a>
+                </div>
+                <div class="margin-left-5">
+                  <a class="active text-center margin-top" value="snip" name="snip" id="8" onclick = "removeDiv(this)"><i
+                      class='fas fa-trash-alt fa-2x' style='color:#0080ff'></i></a>
+                </div>
+              </div>
+              <div class="9 d-flex margin-top-5">
+                <div class="9 form-floating col">
+                  <input type="text" class="9 form-control" Name="Destination" id="9" placeholder="Destination:">
+                  <label class ="9 label-value" for="floatingInput">Destination:</label>
+                </div>
+                <div class="margin-left-5">
+                  <a class="active text-center margin-top" value="snip" name="snip" id="9" onclick = "Capturing(this)"><i
+                      class="fas fa-camera fa-2x"></i></a>
+                </div>
+                <div class="margin-left-5">
+                  <a class="active text-center margin-top" value="snip" name="snip" id="9" onclick = "removeDiv(this)"><i
+                      class='fas fa-trash-alt fa-2x' style='color:#0080ff'></i></a>
+                </div>
+              </div>
+              <div class="10 d-flex margin-top-5">
+                <div class="10 form-floating col">
+                  <input type="text" class="10 form-control" Name="Quantity" id="10" placeholder="Quantity:">
+                  <label class ="10 label-value"  for="floatingInput">Quantity:</label>
+                </div>
+                <div class="margin-left-5">
+                  <a class="active text-center margin-top" value="snip" name="snip" id="10" onclick = "Capturing(this)"><i
+                      class="fas fa-camera fa-2x"></i></a>
+                </div>
+                <div class="margin-left-5">
+                  <a class="active text-center margin-top" value="snip" name="snip" id="10" onclick = "removeDiv(this)"><i
+                      class='fas fa-trash-alt fa-2x' style='color:#0080ff'></i></a>
+                </div>
+              </div>
+              <div class="11 d-flex margin-top-5">
+                <div class="11 form-floating col">
+                  <input type="text" class="11 form-control" Name="Total Amount" id="11" placeholder="Total Amount:">
+                  <label class ="11 label-value" for="floatingInput">Total Amount:</label>
+                </div>
+                <div class="margin-left-5">
+                  <a class="active text-center margin-top" value="snip" name="snip" id="11" onclick = "Capturing(this)"><i
+                      class="fas fa-camera fa-2x"></i></a>
+                </div>
+                <div class="margin-left-5">
+                  <a class="active text-center margin-top" value="snip" name="snip" id="11" onclick = "removeDiv(this)"><i
+                      class='fas fa-trash-alt fa-2x' style='color:#0080ff'></i></a>
+                </div>
+              </div>
+            </div>
+
+            <!-- <div class="padding-top-0 right-scroll right-border margin-top-5" id="NewFieldAdd"> </div> -->
+
+            <div class="text-right margin-top-5" id="AlignmentButtons">
+              <button type="submit" class="btn-common" value="Submit" name="form_submit">Submit</button>
+            </div>
+
+          </form>
+        </section>
+      </div>
+    </div>
+
+    <div class="scroll col-lg-8 col-md-8 col-12">
+      <img class="img" src="{{ url_for('display_image', filename=filename) }}" GFG="auto" id="img2"
+        type="application/jpeg" />
+    </div>
+  </div>
+
+</body>
+
+
+</html>

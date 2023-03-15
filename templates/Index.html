@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Invoice Text Extractor</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" />
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.2/css/bootstrap-select.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.7.1/min/dropzone.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+</head>
+
+<body>
+    <div class="topnav">
+        
+        <a class="active" href="/Registered"> Already Registered! </a>
+        <div class="search-container"></div>
+    </div>
+    <div class="upload">
+        <div class="upload-files">
+            {% with messages = get_flashed_messages() %}
+            {% if messages %}
+            {% for message in messages %}
+            {{ message }}
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+            <h2>New Registration</h2>
+            <br />
+            
+        </div>
+        <form id="upload_form" enctype="multipart/form-data" method="post" action="/">
+            <input type="file" name="file1" id="file1" onchange="uploadFile()"><br>
+            <progress id="progressBar" value="0" max="100" style="width:300px;"></progress>
+            <h3 id="status"></h3>
+            <p id="loaded_n_total"></p>
+        </form>
+    </div>
+    <script>
+        function _(el) {
+            return document.getElementById(el);
+        }
+
+
+        function uploadFile() {
+            var file = _("file1").files[0];
+            sessionStorage.setItem("key", file.name)
+            alert(file.name + " | " + file.size + " | " + file.type);
+            var formdata = new FormData();
+            formdata.append("file1", file);
+            var ajax = new XMLHttpRequest();
+            ajax.upload.addEventListener("progress", progressHandler, false);
+            ajax.addEventListener("load", completeHandler, false);
+            ajax.addEventListener("error", errorHandler, false);
+            ajax.addEventListener("abort", abortHandler, false);
+            ajax.open("POST", "/");
+            // localStorage.setItem("FileName",JSON.stringify(formdata));
+            ajax.send(formdata);
+
+        }
+
+        function progressHandler(event) {
+            _("loaded_n_total").innerHTML = "Uploaded " + event.loaded + " bytes of " + event.total;
+            var percent = (event.loaded / event.total) * 100;
+            _("progressBar").value = Math.round(percent);
+            _("status").innerHTML = Math.round(percent) + "% uploaded... please wait";
+        }
+
+        function completeHandler(event) {
+            _("status").innerHTML = event.target.responseText;
+            _("progressBar").value = 0; //wil clear progress bar after successful upload
+        }
+
+        function errorHandler(event) {
+            _("status").innerHTML = "Upload Failed";
+        }
+
+        function abortHandler(event) {
+            _("status").innerHTML = "Upload Aborted";
+        }
+    </script>
+</body>
+
+</html>

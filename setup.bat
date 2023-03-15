@@ -1,0 +1,1 @@
+conda create -n Invoice_ENV python=3.8.3 -y  && conda activate Invoice_ENV && pip install -r requirements.txt
